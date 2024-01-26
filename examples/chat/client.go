@@ -7,7 +7,9 @@ package main
 import (
 	"bytes"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -46,6 +48,8 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	name string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -127,7 +131,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), name: strconv.Itoa(rand.Int() % 1000)}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

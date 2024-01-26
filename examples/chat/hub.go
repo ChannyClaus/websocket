@@ -4,6 +4,8 @@
 
 package main
 
+import "fmt"
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -34,11 +36,17 @@ func (h *Hub) run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+			go func() {
+				h.broadcast <- []byte(fmt.Sprintf("%s joined the chat! ", client.name))
+			}()
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
+			go func() {
+				h.broadcast <- []byte(fmt.Sprintf("%s left the chat :.(", client.name))
+			}()
 		case message := <-h.broadcast:
 			for client := range h.clients {
 				select {
