@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -31,6 +32,20 @@ func main() {
 	hub := newHub()
 	go hub.run()
 	http.HandleFunc("/", serveHome)
+	http.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL)
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		clientNames := []string{}
+		for client, _ := range hub.clients {
+			clientNames = append(clientNames, client.name)
+		}
+		json.NewEncoder(w).Encode(clientNames)
+
+	})
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
